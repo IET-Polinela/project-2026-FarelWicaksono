@@ -1,5 +1,4 @@
-from django.apps import AppConfig
+from django.shortcuts import render
 
-
-class ContactsConfig(AppConfig):
-    name = 'contacts'
+def contact_view(request):
+    return render(request, 'contacts/contacts.html') [cite: 30, 38]
