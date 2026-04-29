@@ -1,4 +1,4 @@
 from django.shortcuts import render
 
-def about_view(request): # Nama fungsi ini bebas, tapi harus konsisten
+def about_view(request):
     return render(request, 'about/about.html')

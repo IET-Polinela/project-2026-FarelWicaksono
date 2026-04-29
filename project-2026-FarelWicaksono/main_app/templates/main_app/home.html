@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Smart City - Beranda</title>
     <style>
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 20px;
-            border-bottom: 2px solid #333; /* Garis Line sesuai gambarmu */
+            border-bottom: 2px solid #333;
             font-family: Arial, sans-serif;
         }
         .nav-items a {
@@ -17,7 +18,35 @@
             transition: 0.3s;
         }
         .nav-items a:hover {
-            background-color: rgba(0, 0, 0, 0.05); /* Efek block transparan */
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        /* Style tambahan untuk tabel */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-family: Arial, sans-serif;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .btn-add {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+        }
+        .btn-add:hover {
+            background-color: #555;
         }
     </style>
 </head>
@@ -25,13 +54,47 @@
     <div class="header">
         <div class="welcome-text">Selamat Datang di Website Kami</div>
         <div class="nav-items">
-            <a href="/">Home</a>
+            <a href="{% url 'home' %}">Home</a>
             <a href="/about/">About</a>
             <a href="/contacts/">Contacts</a>
         </div>
     </div>
+
     <div style="padding: 20px;">
         <h1>Selamat Datang di kota Bandar Lampung</h1>
+        
+        <hr>
+
+        <h3>Daftar Laporan Masalah Kota</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Judul Laporan</th>
+                    <th>Kategori</th>
+                    <th>Lokasi</th>
+                    <th>Status</th>
+                    <th>Tanggal Lapor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td>{{ report.title }}</td>
+                    <td>{{ report.category }}</td>
+                    <td>{{ report.location }}</td>
+                    <td><strong>{{ report.status }}</strong></td>
+                    <td>{{ report.created_at|date:"d M Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center;">Belum ada laporan yang masuk.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="{% url 'add_report' %}" class="btn-add">Tambah Laporan Baru</a>
     </div>
 </body>
 </html>
