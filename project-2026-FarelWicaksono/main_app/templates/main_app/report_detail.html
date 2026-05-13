@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detail Laporan</title>
+</head>
+<body>
+    <h1>{{ report.title }}</h1>
+    <p>Kategori: {{ report.category }}</p>
+    <p>Lokasi: {{ report.location }}</p>
+    <p>Status: {{ report.status }}</p>
+    <hr>
+    <a href="{% url 'home' %}">Kembali ke Beranda</a>
+</body>
+</html>
