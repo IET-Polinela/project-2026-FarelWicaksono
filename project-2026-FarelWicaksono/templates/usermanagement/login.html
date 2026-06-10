@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Login - Bimasakti City{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h3 class="fw-bold text-center text-primary mb-4">🔑 Masuk Sistem</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form.as_p }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-semibold py-2 shadow-sm">Login</button>
+                </form>
+                <div class="text-center mt-3">
+                    <small class="text-muted">Belum punya akun? <a href="{% url 'register' %}" class="text-decoration-none">Daftar Citizen</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
