@@ -21,6 +21,9 @@
                         <a class="nav-link" href="{% url 'home' %}">Beranda</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/dashboard/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/about/">Tentang</a>
                     </li>
                     <li class="nav-item">
@@ -68,7 +71,7 @@
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-            {% endfor %}
+        {% endfor %}
         {% endif %}
     </div>
 

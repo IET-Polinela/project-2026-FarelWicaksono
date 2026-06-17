@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (
-    ReportListView, ReportDetailView, ReportCreateView, 
-    ReportUpdateView, ReportDeleteView, ReportUpdateStatusView
+    ReportListView, ReportDetailView, ReportCreateView,
+    ReportUpdateView, ReportDeleteView, ReportUpdateStatusView,
+    report_search_api, report_detail_api
 )
 
 urlpatterns = [
@@ -17,4 +18,8 @@ urlpatterns = [
     path('report/<int:pk>/edit/', ReportUpdateView.as_view(), name='report_edit'),
     path('report/<int:pk>/delete/', ReportDeleteView.as_view(), name='report_delete'),
     path('report/<int:pk>/update-status/', ReportUpdateStatusView.as_view(), name='update_status'),
+
+    # API JSON untuk fitur interaktif JavaScript (Live Search & Detail Modal)
+    path('api/reports/search/', report_search_api, name='report_search_api'),
+    path('api/reports/<int:pk>/detail/', report_detail_api, name='report_detail_api'),
 ]

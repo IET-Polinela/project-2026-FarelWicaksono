@@ -5,7 +5,37 @@ from django.urls import reverse_lazy
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse
+from django.db.models import Q
 from .models import Report
+
+# Helper kecil agar label & warna badge status konsisten antara halaman utama dan respons JSON
+STATUS_LABELS = {
+    'REPORTED': 'Reported',
+    'VERIFIED': 'Verified',
+    'IN_PROGRESS': 'In Progress',
+    'RESOLVED': 'Resolved',
+}
+STATUS_BADGE_CLASS = {
+    'REPORTED': 'bg-warning text-dark',
+    'VERIFIED': 'bg-info text-dark',
+    'IN_PROGRESS': 'bg-primary',
+    'RESOLVED': 'bg-success',
+}
+
+def _serialize_report(report):
+    status_key = (report.status or '').upper().replace(' ', '_')
+    return {
+        'id': report.id,
+        'title': report.title,
+        'category': report.category,
+        'location': report.location,
+        'description': report.description,
+        'status': report.status,
+        'status_label': STATUS_LABELS.get(status_key, report.status),
+        'status_badge_class': STATUS_BADGE_CLASS.get(status_key, 'bg-secondary'),
+        'created_at': report.created_at.strftime('%d %b %Y, %H:%M'),
+    }
 
 # 1. Menampilkan daftar laporan (ListView) - Terbuka untuk umum/Citizen
 class ReportListView(ListView):
@@ -96,3 +126,30 @@ class ReportUpdateStatusView(LoginRequiredMixin, View):
             
         report.save()
         return redirect('report_detail', pk=report.id)
+
+
+# 7. API Live Search - Mengembalikan daftar laporan dalam format JSON (untuk fetch() tanpa reload)
+def report_search_api(request):
+    query = request.GET.get('q', '').strip()
+    reports = Report.objects.all().order_by('-created_at')
+
+    if query:
+        reports = reports.filter(
+            Q(title__icontains=query) |
+            Q(category__icontains=query) |
+            Q(location__icontains=query)
+        )
+
+    # Batasi hasil agar payload tetap ringan, selaras dengan prinsip efisiensi fetch
+    reports = reports[:50]
+    data = {
+        'count': len(reports),
+        'results': [_serialize_report(r) for r in reports],
+    }
+    return JsonResponse(data)
+
+
+# 8. API Detail Modal - Mengembalikan satu laporan dalam format JSON (untuk modal pop-up)
+def report_detail_api(request, pk):
+    report = get_object_or_404(Report, pk=pk)
+    return JsonResponse(_serialize_report(report))
