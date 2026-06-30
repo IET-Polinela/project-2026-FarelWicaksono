@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Konfirmasi Hapus Laporan - Bimasakti City{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb bg-white p-2 rounded shadow-sm">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none"><i class="bi bi-house-door-fill"></i> Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Reports</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Hapus Laporan #{{ object.id }}</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow border-0">
+            <div class="card-body p-5 text-center">
+                <div class="text-danger mb-4">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 4rem;"></i>
+                </div>
+                <h3 class="fw-bold text-dark mb-3">Are you sure?</h3>
+                <p class="text-muted mb-4">
+                    Apakah Anda benar-benar yakin ingin menghapus laporan <strong class="text-dark">"{{ object.title }}"</strong>? Tindakan ini tidak dapat dibatalkan.
+                </p>
+
+                <form method="post" id="deleteForm">
+                    {% csrf_token %}
+                    
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'home' %}" class="btn btn-light px-4 fw-semibold border">
+                            Cancel
+                        </a>
+                        
+                        <button type="submit" id="btnDelete" class="btn btn-danger px-4 fw-semibold shadow-sm">
+                            <span id="btnText">Delete</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('deleteForm').addEventListener('submit', function() {
+        var btn = document.getElementById('btnDelete');
+        var text = document.getElementById('btnText');
+        
+        // Disable tombol agar tidak terjadi double-submit
+        btn.disabled = true;
+        
+        // Ubah teks menjadi loading dan tampilkan spinner
+        text.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Deleting...';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit Laporan{% else %}Tambah Laporan{% endif %} - Bimasakti City{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb bg-white p-2 rounded shadow-sm">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none"><i class="bi bi-house-door-fill"></i> Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Reports</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{% if object %}Edit Laporan #{{ object.id }}{% else %}Tambah Baru{% endif %}</li>
+    </ol>
+</nav>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <a href="{% url 'home' %}" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> Kembali ke Daftar
+        </a>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white py-3">
+                <h4 class="card-title mb-0 fw-bold">
+                    {% if object %}
+                        <i class="bi bi-pencil-square"></i> Ubah Data Laporan
+                    {% else %}
+                        <i class="bi bi-plus-circle-fill"></i> Buat Laporan Masalah Baru
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" id="reportForm" novalidate>
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-semibold text-secondary">
+                                {{ field.label }}
+                            </label>
+                            
+                            {% if field.field.widget.input_type == 'checkbox' %}
+                                <div class="form-check">
+                                    {{ field }}
+                                </div>
+                            {% else %}
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">
+                                        {% if 'title' in field.name or 'judul' in field.name %}
+                                            <i class="bi bi-type"></i>
+                                        {% elif 'location' in field.name or 'lokasi' in field.name %}
+                                            <i class="bi bi-geo-alt"></i>
+                                        {% elif 'category' in field.name or 'kategori' in field.name %}
+                                            <i class="bi bi-tags"></i>
+                                        {% else %}
+                                            <i class="bi bi-chat-left-text"></i>
+                                        {% endif %}
+                                    </span>
+                                    
+                                    {% if field.field.choices %}
+                                        <select name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-select {% if field.errors %}is-invalid{% endif %}">
+                                            {% for choice in field.field.choices %}
+                                                <option value="{{ choice.0 }}" {% if field.value == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% elif 'description' in field.name or 'deskripsi' in field.name %}
+                                        <textarea name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control {% if field.errors %}is-invalid{% endif %}" rows="4" placeholder="Masukkan {{ field.label }}...">{{ field.value|default_if_none:'' }}</textarea>
+                                    {% else %}
+                                        <input type="{{ field.field.widget.input_type|default:'text' }}" 
+                                               name="{{ field.name }}" 
+                                               id="{{ field.id_for_label }}" 
+                                               class="form-control {% if field.errors %}is-invalid{% endif %}"
+                                               value="{{ field.value|default_if_none:'' }}"
+                                               placeholder="Masukkan {{ field.label }}...">
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <hr class="text-muted my-4">
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'home' %}" class="btn btn-light px-4 me-md-2">Batal</a>
+                        <button type="submit" id="submitBtn" class="btn btn-primary px-4 shadow-sm">
+                            <i class="bi bi-save"></i> Simpan Laporan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('reportForm').addEventListener('submit', function(e) {
+        var btn = document.getElementById('submitBtn');
+        // Ubah teks & sematkan spinner bootstrap, kemudian matikan tombol aksi
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...';
+        btn.disabled = true; //
+    });
+</script>
+{% endblock %}
