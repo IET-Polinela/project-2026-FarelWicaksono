@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Tentang Bimasakti City{% endblock %}
+
+{% block content %}
+</div> <!-- Trick penutup kontainer luar sementara agar jumbotron bisa full-width -->
+
+<!-- Header Visi Misi Full Width -->
+<header class="bg-dark text-white py-5 text-center shadow mb-5" style="margin-top: -24px;">
+    <div class="container py-3">
+        <h1 class="display-4 fw-bold">Visi & Misi Kami</h1>
+        <p class="lead opacity-75 mb-0">Transformasi Digital untuk Masa Depan Bimasakti City</p>
+    </div>
+</header>
+
+<div class="container"> <!-- Membuka kembali kontainer agar isi bawahnya rapi -->
+    <div class="row g-4 text-center">
+        <div class="col-md-4">
+            <div class="card h-100 border shadow-sm p-4 rounded-4">
+                <div class="h1 mb-3">🚀</div>
+                <h4 class="fw-bold">Respon Cepat</h4>
+                <p class="text-muted small mb-0">Menjamin penanganan laporan infrastruktur warga dengan sistem otomatisasi terbaru.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border shadow-sm p-4 rounded-4">
+                <div class="h1 mb-3">🛡️</div>
+                <h4 class="fw-bold">Transparansi</h4>
+                <p class="text-muted small mb-0">Setiap langkah pengerjaan dapat dipantau langsung oleh pelapor secara real-time.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border shadow-sm p-4 rounded-4">
+                <div class="h1 mb-3">🌐</div>
+                <h4 class="fw-bold">Inovasi</h4>
+                <p class="text-muted small mb-0">Mengintegrasikan seluruh data kota untuk pengambilan keputusan yang lebih cerdas.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 p-5 bg-white rounded-4 shadow-sm border text-center">
+        <h3 class="fw-bold mb-3">Apa itu Smart City?</h3>
+        <p class="text-secondary mx-auto mb-0" style="max-width: 800px;">
+            Bimasakti City menggunakan teknologi informasi dan komunikasi untuk meningkatkan efisiensi operasional, berbagi informasi dengan publik, dan meningkatkan kualitas layanan pemerintah serta kesejahteraan warga.
+        </p>
+    </div>
+{% endblock %}

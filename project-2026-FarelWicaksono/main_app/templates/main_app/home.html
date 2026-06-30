@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Daftar Laporan - Bimasakti City{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb bg-white p-2 rounded shadow-sm">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none"><i class="bi bi-house-door-fill"></i> Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Reports</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h2 class="fw-bold text-dark mb-0">📋 Daftar Laporan Masalah Kota</h2>
+    <a href="{% url 'add_report' %}" class="btn btn-primary shadow-sm">
+        <i class="bi bi-plus-circle-fill"></i> Tambah Laporan
+    </a>
+</div>
+
+<!-- Live Search Box: pencarian instan tanpa reload halaman via Fetch API -->
+<div class="mb-3">
+    <div class="input-group shadow-sm" style="max-width: 420px;">
+        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+        <input type="text" id="liveSearchInput" class="form-control" placeholder="Cari judul, kategori, atau lokasi...">
+        <span class="input-group-text bg-white d-none" id="searchSpinner">
+            <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+        </span>
+    </div>
+    <small class="text-muted">Hasil pencarian akan otomatis tampil sambil mengetik (debounced 400ms).</small>
+</div>
+
+<div class="table-responsive shadow-sm rounded-3 bg-white">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark text-nowrap">
+            <tr>
+                <th scope="col" class="ps-3">Judul Laporan</th>
+                <th scope="col">Kategori</th>
+                <th scope="col">Lokasi</th>
+                <th scope="col" class="text-center">Status</th>
+                <th scope="col" class="text-center pe-3">Aksi</th>
+            </tr>
+        </thead>
+        <!-- tbody ini akan diisi ulang secara dinamis oleh JS (initial render + live search) -->
+        <tbody id="reportsTableBody">
+            {% for report in reports %}
+            <tr>
+                <td class="fw-semibold text-dark ps-3">{{ report.title }}</td>
+                <td><span class="badge bg-secondary text-capitalize">{{ report.category }}</span></td>
+                <td class="text-muted"><i class="bi bi-geo-alt-fill text-danger small"></i> {{ report.location }}</td>
+                <td class="text-center">
+                    {% if report.status == 'REPORTED' or report.status == 'Reported' %}
+                        <span class="badge bg-warning text-dark px-3 py-2">Reported</span>
+                    {% elif report.status == 'VERIFIED' or report.status == 'Verified' %}
+                        <span class="badge bg-info text-dark px-3 py-2">Verified</span>
+                    {% elif report.status == 'IN_PROGRESS' or report.status == 'In Progress' %}
+                        <span class="badge bg-primary px-3 py-2">In Progress</span>
+                    {% elif report.status == 'RESOLVED' or report.status == 'Resolved' %}
+                        <span class="badge bg-success px-3 py-2">Resolved</span>
+                    {% else %}
+                        <span class="badge bg-secondary px-3 py-2">{{ report.status }}</span>
+                    {% endif %}
+                </td>
+                <td class="text-center pe-3">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-dark btn-detail" data-id="{{ report.id }}" title="Lihat Detail">
+                            <i class="bi bi-eye"></i> Detail
+                        </button>
+                        {% if user.is_authenticated and user.is_admin %}
+                            <a href="/report/{{ report.id }}/edit/" class="btn btn-info text-dark" title="Ubah Data">Edit</a>
+                            <a href="/report/{{ report.id }}/delete/" class="btn btn-danger" title="Hapus Data">Hapus</a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="emptyState" class="card border-0 shadow-sm mt-4 {% if reports %}d-none{% endif %}">
+    <div class="card-body text-center p-5">
+        <div class="mb-4"><i class="bi bi-folder-x text-muted" style="font-size: 5rem;"></i></div>
+        <h4 class="fw-bold text-dark" id="emptyStateTitle">Belum ada laporan</h4>
+        <p class="text-muted mx-auto" style="max-width: 400px;" id="emptyStateText">
+            Saat ini tidak ada keluhan atau laporan masalah infrastruktur kota yang terdaftar di database sistem.
+        </p>
+        <a href="{% url 'add_report' %}" class="btn btn-primary px-4 shadow-sm mt-2">
+            <i class="bi bi-plus-circle-fill"></i> Buat Laporan Pertama
+        </a>
+    </div>
+</div>
+
+<!-- Modal Detail Laporan: diisi secara dinamis lewat Fetch API saat tombol "Detail" diklik -->
+<div class="modal fade" id="reportDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="modalReportTitle">Detail Laporan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalBodyContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted mt-2 mb-0">Memuat detail laporan...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="modalDetailLink" class="btn btn-outline-primary btn-sm">Buka Halaman Penuh</a>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Flag dari Django context, dipakai JS saat me-render ulang baris tabel hasil pencarian
+const IS_ADMIN = {{ user.is_admin|yesno:"true,false" }};
+
+const tbody = document.getElementById('reportsTableBody');
+const emptyState = document.getElementById('emptyState');
+const searchInput = document.getElementById('liveSearchInput');
+const searchSpinner = document.getElementById('searchSpinner');
+
+// Membangun ulang baris-baris tabel dari data JSON (dipakai oleh fitur Live Search)
+function renderReportRows(reports) {
+    if (!reports || reports.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('d-none');
+        document.getElementById('emptyStateTitle').textContent = 'Tidak ada laporan yang cocok';
+        document.getElementById('emptyStateText').textContent = 'Coba kata kunci lain untuk pencarian laporan.';
+        return;
+    }
+    emptyState.classList.add('d-none');
+
+    tbody.innerHTML = reports.map(r => `
+        <tr>
+            <td class="fw-semibold text-dark ps-3">${r.title}</td>
+            <td><span class="badge bg-secondary text-capitalize">${r.category}</span></td>
+            <td class="text-muted"><i class="bi bi-geo-alt-fill text-danger small"></i> ${r.location}</td>
+            <td class="text-center">
+                <span class="badge ${r.status_badge_class} px-3 py-2">${r.status_label}</span>
+            </td>
+            <td class="text-center pe-3">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-dark btn-detail" data-id="${r.id}" title="Lihat Detail">
+                        <i class="bi bi-eye"></i> Detail
+                    </button>
+                    ${IS_ADMIN ? `
+                        <a href="/report/${r.id}/edit/" class="btn btn-info text-dark" title="Ubah Data">Edit</a>
+                        <a href="/report/${r.id}/delete/" class="btn btn-danger" title="Hapus Data">Hapus</a>
+                    ` : ''}
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// --- FITUR LIVE SEARCH (Fetch API + debouncing) ---
+// Debounce: menunda eksekusi fetch sampai user berhenti mengetik selama 400ms,
+// supaya server tidak dibanjiri request pada setiap ketukan tombol keyboard.
+let debounceTimer;
+searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    searchSpinner.classList.remove('d-none');
+
+    debounceTimer = setTimeout(() => {
+        const query = searchInput.value.trim();
+        fetch(`/api/reports/search/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Data JSON dari Live Search API:', data); // Bukti screenshot console log
+                renderReportRows(data.results);
+            })
+            .catch(error => console.error('Gagal mengambil data pencarian:', error))
+            .finally(() => searchSpinner.classList.add('d-none'));
+    }, 400);
+});
+
+// --- FITUR DETAIL MODAL (Fetch API + Event Delegation) ---
+// Event listener dipasang pada tbody (elemen induk yang tidak pernah diganti),
+// bukan pada setiap tombol ".btn-detail" satu-per-satu. Karena baris tabel
+// terus diganti (innerHTML) oleh fungsi renderReportRows() saat live search berjalan,
+// listener yang dipasang langsung ke tombol lama akan hilang/tidak berfungsi pada
+// tombol baru. Dengan Event Delegation, listener tetap aktif untuk tombol manapun
+// yang muncul di dalam tbody, kapan pun baris itu dirender.
+tbody.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-detail');
+    if (!btn) return;
+
+    const reportId = btn.dataset.id;
+    const modalEl = document.getElementById('reportDetailModal');
+    const modal = new bootstrap.Modal(modalEl);
+    const modalBody = document.getElementById('modalBodyContent');
+    const modalTitle = document.getElementById('modalReportTitle');
+    const modalLink = document.getElementById('modalDetailLink');
+
+    modalBody.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="text-muted mt-2 mb-0">Memuat detail laporan...</p>
+        </div>`;
+    modal.show();
+
+    fetch(`/api/reports/${reportId}/detail/`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Data JSON Detail Laporan dari Fetch API:', data); // Bukti screenshot console log
+            modalTitle.textContent = data.title;
+            modalLink.href = `/report/${data.id}/`;
+            modalBody.innerHTML = `
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block fw-bold">KATEGORI</label>
+                        <span class="badge bg-secondary fs-6 mt-1 text-capitalize">${data.category}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="text-muted small d-block fw-bold">STATUS</label>
+                        <span class="badge ${data.status_badge_class} fs-6 mt-1">${data.status_label}</span>
+                    </div>
+                    <div class="col-sm-12">
+                        <label class="text-muted small d-block fw-bold">LOKASI</label>
+                        <p class="fw-semibold mb-0"><i class="bi bi-geo-alt-fill text-danger"></i> ${data.location}</p>
+                    </div>
+                </div>
+                <div class="bg-light p-3 rounded border-start border-primary border-3">
+                    <label class="text-muted small d-block fw-bold mb-2">DESKRIPSI</label>
+                    <p class="mb-0" style="white-space: pre-line;">${data.description}</p>
+                </div>
+                <p class="text-muted small mt-3 mb-0">Dilaporkan pada: ${data.created_at}</p>
+            `;
+        })
+        .catch(error => {
+            console.error('Gagal mengambil detail laporan:', error);
+            modalBody.innerHTML = `<div class="alert alert-danger mb-0">Gagal memuat detail laporan.</div>`;
+        });
+});
+</script>
+{% endblock %}

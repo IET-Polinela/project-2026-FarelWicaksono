@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Kontak Bimasakti City{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-5">
+    <div class="col-lg-8 text-center">
+        <h2 class="fw-bold mb-4">Informasi Dukungan Layanan</h2>
+        <p class="text-muted mb-5">Silakan hubungi saluran resmi kami untuk bantuan lebih lanjut mengenai sistem Bimasakti City.</p>
+        
+        <div class="bg-white p-5 shadow-sm rounded-4 border">
+            <div class="row g-4">
+                <div class="col-md-6 border-end">
+                    <p class="text-uppercase small fw-bold text-secondary mb-2">Pusat Panggilan</p>
+                    <h2 class="fw-bold text-dark">(0721) 123456</h2>
+                </div>
+                <div class="col-md-6">
+                    <p class="text-uppercase small fw-bold text-secondary mb-2">Email Dukungan</p>
+                    <h2 class="fw-bold text-dark">help@bimasakti.id</h2>
+                </div>
+            </div>
+            <hr class="my-4">
+            <p class="mb-0 text-secondary">
+                📍 <strong>Kantor Pusat:</strong> Gedung Inovasi Digital, Lantai 4, Kawasan Bisnis Bimasakti City.
+            </p>
+        </div>
+        
+        <a href="{% url 'home' %}" class="btn btn-link mt-5 text-decoration-none text-dark fw-bold">← Kembali ke Beranda</a>
+    </div>
+</div>
+{% endblock %}
