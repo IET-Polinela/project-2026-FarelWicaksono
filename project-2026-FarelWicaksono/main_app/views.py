@@ -11,12 +11,14 @@ from .models import Report
 
 # Helper kecil agar label & warna badge status konsisten antara halaman utama dan respons JSON
 STATUS_LABELS = {
+    'DRAFT': 'Draft',
     'REPORTED': 'Reported',
     'VERIFIED': 'Verified',
     'IN_PROGRESS': 'In Progress',
     'RESOLVED': 'Resolved',
 }
 STATUS_BADGE_CLASS = {
+    'DRAFT': 'bg-secondary',
     'REPORTED': 'bg-warning text-dark',
     'VERIFIED': 'bg-info text-dark',
     'IN_PROGRESS': 'bg-primary',

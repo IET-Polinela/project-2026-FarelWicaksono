@@ -1,0 +1,252 @@
+{
+  "info": {
+    "_postman_id": "d9ec16b2-fc77-4df7-9c1a-247820490010",
+    "name": "Lab Session 10 - JWT Authentication",
+    "description": "Pengujian registrasi Citizen, login JWT, refresh token, dan permission Report.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "username",
+      "value": "citizen_lab10"
+    },
+    {
+      "key": "password",
+      "value": "PasswordKuat123!"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "report_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Register Citizen",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"citizen10@example.com\",\n  \"password\": \"{{password}}\",\n  \"password2\": \"{{password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/register/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "register", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Login JWT",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.access) pm.collectionVariables.set('access_token', data.access);",
+              "if (data.refresh) pm.collectionVariables.set('refresh_token', data.refresh);",
+              "pm.test('Login berhasil', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/token/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "token", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Create Report Tanpa Reporter",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.id) pm.collectionVariables.set('report_id', data.id);",
+              "pm.test('Report dibuat', function () { pm.response.to.have.status(201); });",
+              "pm.test('Status otomatis DRAFT', function () { pm.expect(data.status).to.eql('DRAFT'); });",
+              "pm.test('Reporter diisi server', function () { pm.expect(data.reporter).to.eql(pm.collectionVariables.get('username')); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Banjir di Jalan Utama\",\n  \"category\": \"Drainase\",\n  \"description\": \"Air meluap dan menggenangi jalan warga.\",\n  \"location\": \"Jalan Utama, Bimasakti City\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/reports/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "reports", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. GET ALL Reports",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/reports/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "reports", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. PUT Report DRAFT",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Banjir di Jalan Utama - Diperbarui\",\n  \"category\": \"Drainase\",\n  \"description\": \"Ketinggian air bertambah setelah hujan deras.\",\n  \"location\": \"Jalan Utama, Bimasakti City\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/reports/{{report_id}}/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "reports", "{{report_id}}", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. DELETE Report (403 jika sudah VERIFIED)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/reports/{{report_id}}/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "reports", "{{report_id}}", ""]
+        },
+        "description": "Ubah status Report menjadi VERIFIED melalui Django Admin terlebih dahulu agar request ini menghasilkan 403 Forbidden."
+      },
+      "response": []
+    },
+    {
+      "name": "7. Refresh Access Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.access) pm.collectionVariables.set('access_token', data.access);",
+              "pm.test('Access token diperbarui', function () { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/token/refresh/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "token", "refresh", ""]
+        }
+      },
+      "response": []
+    }
+  ]
+}
