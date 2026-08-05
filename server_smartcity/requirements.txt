@@ -5,3 +5,5 @@ django-cors-headers>=4.3
 psycopg2-binary>=2.9
 Faker>=30.0
 gunicorn
+drf-spectacular
+Django-scalar

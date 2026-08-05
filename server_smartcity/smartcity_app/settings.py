@@ -2,7 +2,11 @@
 Django settings for the smartcity_app project.
 
 Backend Django REST Framework untuk aplikasi Smart City.
-Disesuaikan untuk Lab Session 13 - Deployment.
+Dikembangkan sampai Lab Session 14:
+- JWT Authentication
+- CORS
+- Deployment
+- OpenAPI Documentation
 """
 
 import os
@@ -20,18 +24,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 # ============================================================
 
-# Untuk server production, isi DJANGO_SECRET_KEY melalui
-# environment variable dan jangan menyimpan secret asli di GitHub.
 SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY",
     "django-insecure-development-only-change-this-key",
 )
 
-# Lokal:
-#   DJANGO_DEBUG=True
-#
-# Server:
-#   DJANGO_DEBUG=False
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in {
     "1",
     "true",
@@ -39,8 +36,7 @@ DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in {
     "on",
 }
 
-# Konfigurasi ini mengikuti kebutuhan praktikum Lab 13.
-# Pada production sebenarnya, sebaiknya diisi host tertentu.
+# Digunakan untuk kebutuhan praktikum dan server kampus.
 ALLOWED_HOSTS = ["*"]
 
 
@@ -61,6 +57,10 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
+
+    # OpenAPI documentation - Lab 14
+    "drf_spectacular",
+    "django_scalar",
 
     # Project applications
     "usermanagement_24782049",
@@ -93,7 +93,6 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
 
-        # Folder templates global berada sejajar dengan manage.py.
         "DIRS": [
             BASE_DIR / "templates",
         ],
@@ -119,15 +118,13 @@ WSGI_APPLICATION = "smartcity_app.wsgi.application"
 # DATABASE
 # ============================================================
 
-# Secara default project menggunakan PostgreSQL.
-#
-# Untuk pengujian cepat menggunakan SQLite:
+# Untuk menggunakan SQLite sementara:
 #
 # PowerShell:
 #   $env:USE_SQLITE="1"
 #
-# Linux:
-#   export USE_SQLITE=1
+# Untuk kembali ke PostgreSQL:
+#   Remove-Item Env:USE_SQLITE
 
 if os.getenv("USE_SQLITE") == "1":
     DATABASES = {
@@ -142,7 +139,6 @@ else:
         "default": {
             "ENGINE": "django.db.backends.postgresql",
 
-            # Data database dibaca dari environment variable.
             "NAME": os.getenv(
                 "DB_NAME",
                 "smartcity_db",
@@ -222,8 +218,6 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
-# Folder tujuan hasil perintah:
-# python manage.py collectstatic --noinput
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
@@ -239,10 +233,15 @@ LOGOUT_REDIRECT_URL = "login"
 
 
 # ============================================================
-# DJANGO REST FRAMEWORK AND JWT
+# DJANGO REST FRAMEWORK, JWT, AND OPENAPI
 # ============================================================
 
 REST_FRAMEWORK = {
+    # Schema OpenAPI menggunakan drf-spectacular.
+    "DEFAULT_SCHEMA_CLASS": (
+        "drf_spectacular.openapi.AutoSchema"
+    ),
+
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
@@ -262,13 +261,27 @@ REST_FRAMEWORK = {
 
 
 # ============================================================
+# OPENAPI DOCUMENTATION - LAB SESSION 14
+# ============================================================
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Smart City Portal API",
+
+    "DESCRIPTION": (
+        "Dokumentasi REST API resmi untuk Portal "
+        "Pelaporan Laporan Warga"
+    ),
+
+    "VERSION": "1.0.0",
+
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+
+
+# ============================================================
 # CROSS-ORIGIN RESOURCE SHARING
 # ============================================================
 
-# Frontend GitHub Pages dan backend server kampus berada
-# pada origin yang berbeda.
-#
-# Konfigurasi terbuka ini digunakan sesuai kebutuhan praktikum.
 CORS_ALLOW_ALL_ORIGINS = True
 
 
@@ -276,6 +289,26 @@ CORS_ALLOW_ALL_ORIGINS = True
 # DEFAULT PRIMARY KEY
 # ============================================================
 
-# Tetap menggunakan AutoField agar konsisten dengan migration
-# dari lab sebelumnya.
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+
+# ============================================================
+# SERVER-SPECIFIC SETTINGS
+# ============================================================
+
+# local_settings.py tersedia pada server kampus dan tidak
+# dimasukkan ke GitHub. File tersebut berisi konfigurasi
+# database server, DEBUG, CORS, dan pengaturan server lainnya.
+
+try:
+    from .local_settings import *  # noqa: F401, F403
+except ImportError:
+    pass
+
+
+# local_settings.py sebelumnya memiliki REST_FRAMEWORK sendiri.
+# Baris ini memastikan AutoSchema drf-spectacular tetap aktif
+# setelah local_settings.py dibaca.
+REST_FRAMEWORK["DEFAULT_SCHEMA_CLASS"] = (
+    "drf_spectacular.openapi.AutoSchema"
+)
