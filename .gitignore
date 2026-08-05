@@ -1,4 +1,5 @@
-﻿project-2026-FarelWicaksono/db.sqlite3
+﻿server_smartcity/db.sqlite3
+server_smartcity/staticfiles/
 **/__pycache__/
 *.pyc
 *.pyo
