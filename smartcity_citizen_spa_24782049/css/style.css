@@ -195,3 +195,87 @@ main {
     border-radius: .85rem;
   }
 }
+
+/* Lab Session 12: tabs, cards, progress, pagination, dan modal. */
+.report-tabs {
+  gap: .5rem;
+  padding: .35rem;
+  border-radius: .8rem;
+  background: #eef4fb;
+}
+
+.report-tabs .nav-link {
+  flex: 1;
+  color: var(--portal-muted);
+  font-weight: 700;
+  border-radius: .65rem;
+}
+
+.report-tabs .nav-link.active {
+  color: #fff;
+  background: var(--portal-blue);
+  box-shadow: 0 .35rem .8rem rgba(19, 95, 186, .2);
+}
+
+.report-card {
+  padding: 1.15rem;
+  border: 1px solid var(--portal-border);
+  border-radius: .95rem;
+  background: #fff;
+  box-shadow: 0 .25rem .85rem rgba(11, 31, 58, .045);
+}
+
+.report-card:hover {
+  border-color: #bfd4e9;
+}
+
+.report-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.gap-x-3 { column-gap: 1rem; }
+.gap-y-2 { row-gap: .5rem; }
+
+.progress {
+  height: .55rem;
+  border-radius: 999px;
+  background: #e8eef5;
+}
+
+.progress-bar {
+  border-radius: 999px;
+  background: var(--portal-blue);
+}
+
+.progress-draft { background: #d69e00; }
+.progress-reported { background: #2477c8; }
+.progress-verified { background: #2c9c57; }
+.progress-in_progress { background: #7650b5; }
+.progress-resolved { background: #168d86; }
+
+.pagination .page-link {
+  color: var(--portal-blue);
+}
+
+.pagination .active > .page-link {
+  color: #fff;
+  background: var(--portal-blue);
+  border-color: var(--portal-blue);
+}
+
+.modal-content {
+  border-radius: 1rem;
+}
+
+@media (max-width: 575.98px) {
+  .report-card {
+    padding: 1rem;
+  }
+
+  .modal-footer > .btn {
+    width: 100%;
+  }
+}

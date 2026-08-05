@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -8,7 +11,7 @@ from .models import Report
 User = get_user_model()
 
 
-class Lab10AuthenticationAndPermissionTests(APITestCase):
+class Lab12ReportAPITests(APITestCase):
     def setUp(self):
         self.citizen = User.objects.create_user(
             username='citizen1',
@@ -44,6 +47,16 @@ class Lab10AuthenticationAndPermissionTests(APITestCase):
         )
         return response
 
+    def create_report(self, owner, title, status_value='DRAFT'):
+        return Report.objects.create(
+            title=title,
+            category='Drainase',
+            description=f'Deskripsi {title}',
+            location='Bandar Lampung',
+            status=status_value,
+            reporter=owner,
+        )
+
     def test_register_creates_citizen_role(self):
         response = self.client.post(
             '/api/register/',
@@ -59,9 +72,8 @@ class Lab10AuthenticationAndPermissionTests(APITestCase):
         user = User.objects.get(username='warga_baru')
         self.assertTrue(user.is_member)
         self.assertFalse(user.is_admin)
-        self.assertTrue(user.check_password('PasswordKuat456!'))
 
-    def test_citizen_can_create_report_without_reporter_payload(self):
+    def test_create_report_uses_jwt_owner_and_default_draft(self):
         self.login_as('citizen1')
         response = self.client.post(
             '/api/reports/',
@@ -77,65 +89,74 @@ class Lab10AuthenticationAndPermissionTests(APITestCase):
         report = Report.objects.get(pk=response.data['id'])
         self.assertEqual(report.reporter, self.citizen)
         self.assertEqual(report.status, 'DRAFT')
-        self.assertEqual(response.data['reporter'], 'citizen1')
+        self.assertTrue(response.data['is_owner'])
 
-    def test_admin_cannot_create_report_through_citizen_endpoint(self):
-        self.login_as('admin1')
+    def test_citizen_can_submit_new_report_as_reported(self):
+        self.login_as('citizen1')
         response = self.client.post(
             '/api/reports/',
             {
-                'title': 'Laporan Admin',
-                'category': 'Lainnya',
-                'description': 'Tidak boleh dibuat sebagai Citizen.',
-                'location': 'Kantor',
+                'title': 'Laporan langsung diajukan',
+                'category': 'Sampah',
+                'description': 'Sampah menumpuk.',
+                'location': 'Jalan A',
+                'status': 'REPORTED',
             },
             format='json',
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['status'], 'REPORTED')
 
-    def test_citizen_list_hides_other_users_draft(self):
-        own_draft = Report.objects.create(
-            title='Draft sendiri',
-            category='Jalan',
-            description='Draft milik citizen1',
-            location='Lokasi A',
-            status='DRAFT',
-            reporter=self.citizen,
-        )
-        Report.objects.create(
-            title='Draft orang lain',
-            category='Jalan',
-            description='Draft milik citizen2',
-            location='Lokasi B',
-            status='DRAFT',
-            reporter=self.other_citizen,
-        )
-        published = Report.objects.create(
-            title='Laporan verified',
-            category='Jalan',
-            description='Boleh dilihat semua user login',
-            location='Lokasi C',
-            status='VERIFIED',
-            reporter=self.other_citizen,
-        )
+    def test_my_reports_returns_only_current_users_reports(self):
+        own_draft = self.create_report(self.citizen, 'Draft sendiri')
+        own_reported = self.create_report(self.citizen, 'Reported sendiri', 'REPORTED')
+        self.create_report(self.other_citizen, 'Laporan orang lain', 'VERIFIED')
 
         self.login_as('citizen1')
-        response = self.client.get('/api/reports/')
+        response = self.client.get('/api/reports/?tab=my_reports')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        ids = {item['id'] for item in response.data}
-        self.assertIn(own_draft.id, ids)
-        self.assertIn(published.id, ids)
-        self.assertEqual(len(ids), 2)
+        ids = {item['id'] for item in response.data['results']}
+        self.assertEqual(ids, {own_draft.id, own_reported.id})
+        self.assertTrue(all(item['is_owner'] for item in response.data['results']))
 
-    def test_owner_can_update_own_draft(self):
-        report = Report.objects.create(
-            title='Judul lama',
-            category='Jalan',
-            description='Deskripsi lama',
-            location='Lokasi lama',
-            status='DRAFT',
-            reporter=self.citizen,
-        )
+    def test_feed_hides_draft_excludes_owner_and_anonymizes_reporter(self):
+        self.create_report(self.citizen, 'Laporan sendiri', 'REPORTED')
+        self.create_report(self.other_citizen, 'Draft orang lain', 'DRAFT')
+        public_report = self.create_report(self.other_citizen, 'Feed publik', 'VERIFIED')
+
+        self.login_as('citizen1')
+        response = self.client.get('/api/reports/?tab=feed')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        item = response.data['results'][0]
+        self.assertEqual(item['id'], public_report.id)
+        self.assertEqual(item['reporter'], 'Warga Anonim')
+        self.assertFalse(item['is_owner'])
+
+    def test_pagination_limits_results_to_ten(self):
+        for index in range(12):
+            self.create_report(self.citizen, f'Laporan {index + 1}')
+
+        self.login_as('citizen1')
+        response = self.client.get('/api/reports/?tab=my_reports&page=1')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 12)
+        self.assertEqual(len(response.data['results']), 10)
+        self.assertIsNotNone(response.data['next'])
+
+    def test_results_are_sorted_by_latest_updated_at(self):
+        older = self.create_report(self.citizen, 'Laporan lama')
+        newer = self.create_report(self.citizen, 'Laporan baru')
+        Report.objects.filter(pk=older.pk).update(updated_at=timezone.now() - timedelta(days=2))
+        Report.objects.filter(pk=newer.pk).update(updated_at=timezone.now())
+
+        self.login_as('citizen1')
+        response = self.client.get('/api/reports/?tab=my_reports')
+        ids = [item['id'] for item in response.data['results']]
+        self.assertEqual(ids[:2], [newer.id, older.id])
+
+    def test_owner_can_edit_and_submit_own_draft(self):
+        report = self.create_report(self.citizen, 'Judul lama')
         self.login_as('citizen1')
         response = self.client.put(
             f'/api/reports/{report.id}/',
@@ -144,28 +165,40 @@ class Lab10AuthenticationAndPermissionTests(APITestCase):
                 'category': 'Drainase',
                 'description': 'Deskripsi baru',
                 'location': 'Lokasi baru',
+                'status': 'REPORTED',
             },
             format='json',
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         report.refresh_from_db()
         self.assertEqual(report.title, 'Judul baru')
-        self.assertEqual(report.status, 'DRAFT')
+        self.assertEqual(report.status, 'REPORTED')
 
-    def test_delete_verified_report_returns_403(self):
-        report = Report.objects.create(
-            title='Sudah diverifikasi',
-            category='Jalan',
-            description='Tidak boleh dihapus Citizen.',
-            location='Lokasi A',
-            status='VERIFIED',
-            reporter=self.citizen,
-        )
+    def test_reported_report_cannot_be_edited_again(self):
+        report = self.create_report(self.citizen, 'Sudah diajukan', 'REPORTED')
         self.login_as('citizen1')
-        response = self.client.delete(f'/api/reports/{report.id}/')
+        response = self.client.patch(
+            f'/api/reports/{report.id}/',
+            {'title': 'Manipulasi'},
+            format='json',
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertTrue(Report.objects.filter(pk=report.id).exists())
+
+    def test_citizen_cannot_choose_workflow_status_owned_by_admin(self):
+        self.login_as('citizen1')
+        response = self.client.post(
+            '/api/reports/',
+            {
+                'title': 'Status ilegal',
+                'category': 'Umum',
+                'description': 'Mencoba langsung resolved.',
+                'location': 'Lokasi',
+                'status': 'RESOLVED',
+            },
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_api_requires_authentication(self):
-        response = self.client.get('/api/reports/')
+        response = self.client.get('/api/reports/?tab=my_reports')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

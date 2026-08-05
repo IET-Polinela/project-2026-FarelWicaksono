@@ -22,8 +22,8 @@ class Report(models.Model):
         choices=STATUS_CHOICES,
         default='DRAFT',
     )
-    # null=True menjaga data laporan Lab 9 tetap dapat dimigrasikan. Semua laporan
-    # baru dari API Lab 10 selalu diisi otomatis melalui perform_create().
+    # null=True menjaga data laporan dari lab sebelumnya tetap dapat dimigrasikan.
+    # Semua laporan baru dari API selalu diisi melalui perform_create().
     reporter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -32,9 +32,10 @@ class Report(models.Model):
         blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-updated_at', '-id']
 
     def __str__(self):
         return self.title

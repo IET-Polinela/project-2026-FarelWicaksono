@@ -5,7 +5,7 @@ from .models import Report
 
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ('title', 'reporter', 'category', 'status', 'created_at')
+    list_display = ('title', 'reporter', 'category', 'status', 'updated_at')
     list_filter = ('status', 'category')
     search_fields = ('title', 'category', 'location', 'reporter__username')
-    readonly_fields = ('created_at',)
+    readonly_fields = ('created_at', 'updated_at')

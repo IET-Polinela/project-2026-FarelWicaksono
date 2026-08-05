@@ -9,8 +9,27 @@ class APIError extends Error {
   }
 }
 
+async function refreshAccessToken() {
+  const refreshToken = localStorage.getItem('refresh_token');
+  if (!refreshToken) return false;
+
+  const response = await fetch(`${API_BASE_URL}/api/token/refresh/`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ refresh: refreshToken }),
+  });
+
+  if (!response.ok) return false;
+  const data = await response.json();
+  localStorage.setItem('access_token', data.access);
+  return true;
+}
+
 async function requestAPI(endpoint, method = 'GET', bodyData = null, options = {}) {
-  const { auth = true } = options;
+  const { auth = true, retry = true } = options;
   const headers = { Accept: 'application/json' };
   const accessToken = localStorage.getItem('access_token');
 
@@ -37,14 +56,28 @@ async function requestAPI(endpoint, method = 'GET', bodyData = null, options = {
     );
   }
 
+  if (response.status === 401 && auth && retry) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      return requestAPI(endpoint, method, bodyData, { ...options, retry: false });
+    }
+  }
+
   const contentType = response.headers.get('content-type') || '';
-  const data = contentType.includes('application/json')
-    ? await response.json()
-    : await response.text();
+  let data = null;
+  if (response.status !== 204) {
+    data = contentType.includes('application/json')
+      ? await response.json()
+      : await response.text();
+  }
 
   if (!response.ok) {
+    const firstFieldError = data && typeof data === 'object'
+      ? Object.values(data).flat().find((item) => typeof item === 'string')
+      : null;
     const message = data?.detail
       || data?.non_field_errors?.[0]
+      || firstFieldError
       || 'Permintaan ke API gagal.';
     throw new APIError(message, response.status, data);
   }

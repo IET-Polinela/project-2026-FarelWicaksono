@@ -165,3 +165,6 @@ REST_FRAMEWORK = {
 # Frontend SPA berjalan pada port 5500, sedangkan Django API pada port 8000.
 # Konfigurasi terbuka ini hanya untuk pengujian lokal selama praktikum.
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Konsisten dengan primary key project dari lab sebelumnya.
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

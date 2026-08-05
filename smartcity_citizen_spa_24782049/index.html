@@ -29,10 +29,73 @@
     </div>
   </main>
 
+  <!-- Modal tambah/edit laporan. Semua tombol aksi bertipe button agar SPA tidak reload. -->
+  <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header">
+          <div>
+            <p class="section-title mb-1">Manajemen Laporan</p>
+            <h2 class="modal-title fs-5 fw-bold" id="reportModalLabel">Buat Laporan Baru</h2>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div id="report-form-alert" class="alert alert-danger d-none" role="alert"></div>
+          <form id="report-form" novalidate>
+            <div class="row g-3">
+              <div class="col-12 col-md-8">
+                <label for="report-title" class="form-label fw-semibold">Judul laporan</label>
+                <input type="text" class="form-control" id="report-title" maxlength="200" required>
+                <div class="invalid-feedback">Judul laporan wajib diisi.</div>
+              </div>
+              <div class="col-12 col-md-4">
+                <label for="report-category" class="form-label fw-semibold">Kategori</label>
+                <select class="form-select" id="report-category" required>
+                  <option value="">Pilih kategori</option>
+                  <option value="Jalan Rusak">Jalan Rusak</option>
+                  <option value="Drainase">Drainase</option>
+                  <option value="Lampu Mati">Lampu Mati</option>
+                  <option value="Sampah">Sampah</option>
+                  <option value="Keamanan">Keamanan</option>
+                  <option value="Umum">Umum</option>
+                </select>
+                <div class="invalid-feedback">Kategori wajib dipilih.</div>
+              </div>
+              <div class="col-12">
+                <label for="report-location" class="form-label fw-semibold">Lokasi</label>
+                <input type="text" class="form-control" id="report-location" maxlength="200" required>
+                <div class="invalid-feedback">Lokasi laporan wajib diisi.</div>
+              </div>
+              <div class="col-12">
+                <label for="report-description" class="form-label fw-semibold">Deskripsi</label>
+                <textarea class="form-control" id="report-description" rows="5" required></textarea>
+                <div class="invalid-feedback">Deskripsi laporan wajib diisi.</div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer flex-column flex-sm-row">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg me-1"></i>Batal
+          </button>
+          <button type="button" class="btn btn-outline-primary" id="save-draft-button">
+            <span class="action-label"><i class="bi bi-save me-1"></i>Simpan Draft</span>
+            <span class="action-loading d-none"><span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...</span>
+          </button>
+          <button type="button" class="btn btn-primary" id="submit-report-button">
+            <span class="action-label"><i class="bi bi-send me-1"></i>Ajukan</span>
+            <span class="action-loading d-none"><span class="spinner-border spinner-border-sm me-2"></span>Mengirim...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="portal-footer py-4 mt-auto">
     <div class="container-fluid px-3 px-lg-4 d-flex flex-column flex-md-row justify-content-between gap-2">
       <span><i class="bi bi-shield-check me-1"></i> Citizen Portal Smart City</span>
-      <span>Lab Session 11 &middot; NPM 24782049</span>
+      <span>Lab Session 12 &middot; NPM 24782049</span>
     </div>
   </footer>
 
