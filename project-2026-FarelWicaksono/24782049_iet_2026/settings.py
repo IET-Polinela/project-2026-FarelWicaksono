@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'corsheaders',
     'usermanagement_24782049',
     'dashboard_24782049',
     'main_app',
@@ -49,6 +50,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Lab 11: harus berada sebelum CommonMiddleware agar header CORS selalu ditambahkan.
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -156,3 +159,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+
+# Cross-Origin Resource Sharing (Lab Session 11)
+# Frontend SPA berjalan pada port 5500, sedangkan Django API pada port 8000.
+# Konfigurasi terbuka ini hanya untuk pengujian lokal selama praktikum.
+CORS_ALLOW_ALL_ORIGINS = True
