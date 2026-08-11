@@ -21,7 +21,7 @@
 <div class="mb-3">
     <div class="input-group shadow-sm" style="max-width: 420px;">
         <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-        <input type="text" id="liveSearchInput" class="form-control" placeholder="Cari judul, kategori, atau lokasi...">
+        <input type="text" id="searchInput" class="form-control" placeholder="Cari judul, kategori, atau lokasi...">
         <span class="input-group-text bg-white d-none" id="searchSpinner">
             <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
         </span>
@@ -41,7 +41,7 @@
             </tr>
         </thead>
         <!-- tbody ini akan diisi ulang secara dinamis oleh JS (initial render + live search) -->
-        <tbody id="reportsTableBody">
+        <tbody id="reportTableBody">
             {% for report in reports %}
             <tr>
                 <td class="fw-semibold text-dark ps-3">{{ report.title }}</td>
@@ -71,6 +71,10 @@
                         {% endif %}
                     </div>
                 </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-muted py-3">Belum ada laporan.</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -116,9 +120,9 @@
 // Flag dari Django context, dipakai JS saat me-render ulang baris tabel hasil pencarian
 const IS_ADMIN = {{ user.is_admin|yesno:"true,false" }};
 
-const tbody = document.getElementById('reportsTableBody');
+const tbody = document.getElementById('reportTableBody');
 const emptyState = document.getElementById('emptyState');
-const searchInput = document.getElementById('liveSearchInput');
+const searchInput = document.getElementById('searchInput');
 const searchSpinner = document.getElementById('searchSpinner');
 
 // Membangun ulang baris-baris tabel dari data JSON (dipakai oleh fitur Live Search)
@@ -155,26 +159,48 @@ function renderReportRows(reports) {
     `).join('');
 }
 
-// --- FITUR LIVE SEARCH (Fetch API + debouncing) ---
-// Debounce: menunda eksekusi fetch sampai user berhenti mengetik selama 400ms,
-// supaya server tidak dibanjiri request pada setiap ketukan tombol keyboard.
+// --- FITUR LIVE SEARCH LAB 15 ---
 let debounceTimer;
-searchInput.addEventListener('input', () => {
+
+function scheduleLiveSearch() {
     clearTimeout(debounceTimer);
     searchSpinner.classList.remove('d-none');
 
-    debounceTimer = setTimeout(() => {
+    debounceTimer = setTimeout(async () => {
         const query = searchInput.value.trim();
-        fetch(`/api/reports/search/?q=${encodeURIComponent(query)}`)
-            .then(response => response.json())
-            .then(data => {
-                console.log('Data JSON dari Live Search API:', data); // Bukti screenshot console log
-                renderReportRows(data.results);
-            })
-            .catch(error => console.error('Gagal mengambil data pencarian:', error))
-            .finally(() => searchSpinner.classList.add('d-none'));
-    }, 400);
-});
+
+        try {
+            const response = await fetch(
+                `/search/?q=${encodeURIComponent(query)}`,
+                {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Data JSON dari Live Search API:', data);
+            renderReportRows(data.results || []);
+        } catch (error) {
+            console.error('Gagal mengambil data pencarian:', error);
+        } finally {
+            searchSpinner.classList.add('d-none');
+        }
+    }, 150);
+}
+
+// Playwright mengetik karakter satu per satu. Kedua event ini memastikan
+// request terakhir selalu terkirim setelah keyword lengkap "Lampu".
+searchInput.addEventListener('input', scheduleLiveSearch);
+searchInput.addEventListener('keyup', scheduleLiveSearch);
 
 // --- FITUR DETAIL MODAL (Fetch API + Event Delegation) ---
 // Event listener dipasang pada tbody (elemen induk yang tidak pernah diganti),

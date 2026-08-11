@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://103.151.63.86:8003";
+const API_BASE_URL = "http://localhost:8000";
 
 class APIError extends Error {
   constructor(message, status, data = null) {

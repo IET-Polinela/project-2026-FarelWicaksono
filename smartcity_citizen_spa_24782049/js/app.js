@@ -52,7 +52,7 @@ function normalizePaginatedData(data) {
 }
 
 function renderNavigation() {
-  const nav = document.getElementById('nav-menu');
+  const nav = document.getElementById('nav-menus');
   if (!nav) return;
 
   if (isAuthenticated()) {
@@ -97,27 +97,27 @@ function renderLogin() {
               <h2 class="fw-bold mb-2">Selamat datang kembali</h2>
               <p class="text-secondary mb-4">Gunakan akun Citizen yang telah terdaftar pada backend Django.</p>
 
-              <div id="login-alert" class="alert alert-danger d-none" role="alert"></div>
+              <div id="loginAlert" class="alert alert-danger d-none" role="alert"></div>
 
-              <form id="login-form" novalidate>
+              <form id="loginForm" novalidate>
                 <div class="mb-3">
-                  <label for="login-username" class="form-label fw-semibold">Username</label>
+                  <label for="loginUsername" class="form-label fw-semibold">Username</label>
                   <div class="input-group">
                     <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
-                    <input type="text" class="form-control" id="login-username" name="username" autocomplete="username" required>
+                    <input type="text" class="form-control" id="loginUsername" name="username" autocomplete="username" required>
                   </div>
                 </div>
                 <div class="mb-4">
-                  <label for="login-password" class="form-label fw-semibold">Password</label>
+                  <label for="loginPassword" class="form-label fw-semibold">Password</label>
                   <div class="input-group">
                     <span class="input-group-text bg-white"><i class="bi bi-key"></i></span>
-                    <input type="password" class="form-control" id="login-password" name="password" autocomplete="current-password" required>
-                    <button class="btn btn-outline-secondary" type="button" id="toggle-password" aria-label="Tampilkan password">
+                    <input type="password" class="form-control" id="loginPassword" name="password" autocomplete="current-password" required>
+                    <button class="btn btn-outline-secondary" type="button" id="togglePassword" aria-label="Tampilkan password">
                       <i class="bi bi-eye"></i>
                     </button>
                   </div>
                 </div>
-                <button class="btn btn-primary w-100 py-2 fw-semibold" type="submit" id="login-submit">
+                <button class="btn btn-primary w-100 py-2 fw-semibold" type="submit" id="loginSubmit">
                   <span class="button-label"><i class="bi bi-box-arrow-in-right me-1"></i> Masuk ke Portal</span>
                   <span class="button-loading d-none"><span class="spinner-border spinner-border-sm me-2"></span>Memproses...</span>
                 </button>
@@ -132,7 +132,7 @@ function renderLogin() {
 
 function renderDashboardShell() {
   renderNavigation();
-  const username = localStorage.getItem('citizen_username') || 'Citizen';
+  const username = localStorage.getItem('username') || 'Citizen';
 
   document.getElementById('app-content').innerHTML = `
     <section class="portal-card hero-card p-4 p-lg-5 mb-4">
@@ -143,10 +143,10 @@ function renderDashboardShell() {
           <p class="mb-0 opacity-75">Kelola laporan pribadi dan pantau Feed Kota tanpa memuat ulang halaman.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-          <button class="btn btn-outline-light" type="button" id="refresh-dashboard">
+          <button class="btn btn-outline-light" type="button" id="refreshDashboard">
             <i class="bi bi-arrow-clockwise me-1"></i> Muat Ulang
           </button>
-          <button class="btn btn-light" type="button" id="new-report-button">
+          <button class="btn btn-light" type="button" id="btnBukaModal">
             <i class="bi bi-plus-circle me-1"></i> Tambah Laporan Baru
           </button>
         </div>
@@ -171,7 +171,7 @@ function renderDashboardShell() {
             <p class="section-title mb-0">Rekap Status Saya</p>
             <i class="bi bi-bar-chart text-primary"></i>
           </div>
-          <div id="status-summary" class="d-grid gap-3">
+          <div id="summaryStats" class="d-grid gap-3">
             <div class="text-secondary small">Menghitung laporan...</div>
           </div>
         </div>
@@ -188,10 +188,10 @@ function renderDashboardShell() {
               <span class="badge text-bg-primary align-self-start align-self-md-center" id="report-count">0 laporan</span>
             </div>
             <div class="nav nav-pills report-tabs" role="tablist" aria-label="Pilih daftar laporan">
-              <button class="nav-link active" type="button" data-report-tab="my_reports">
+              <button class="nav-link active" id="tabLaporanSaya" type="button" data-report-tab="my_reports">
                 <i class="bi bi-person-lines-fill me-1"></i>Laporan Saya
               </button>
-              <button class="nav-link" type="button" data-report-tab="feed">
+              <button class="nav-link" id="tabFeedKota" type="button" data-report-tab="feed">
                 <i class="bi bi-globe2 me-1"></i>Feed Kota
               </button>
             </div>
@@ -200,14 +200,14 @@ function renderDashboardShell() {
             </small>
           </div>
 
-          <div id="reports-container">
+          <div id="listContainer">
             <div class="empty-state">
               <div class="spinner-border spinner-border-sm text-primary mb-3" role="status"></div>
               <p class="mb-0">Mengambil data dari Django API...</p>
             </div>
           </div>
           <nav class="mt-4" aria-label="Navigasi halaman laporan">
-            <div id="pagination-container"></div>
+            <div id="paginationContainer"></div>
           </nav>
         </div>
       </div>
@@ -239,10 +239,10 @@ function renderDashboardShell() {
     </section>
   `;
 
-  document.getElementById('refresh-dashboard')?.addEventListener('click', () => {
+  document.getElementById('refreshDashboard')?.addEventListener('click', () => {
     loadDashboardData(currentTab, currentPage);
   });
-  document.getElementById('new-report-button')?.addEventListener('click', openCreateReportModal);
+  document.getElementById('btnBukaModal')?.addEventListener('click', openCreateReportModal);
   document.querySelectorAll('[data-report-tab]').forEach((button) => {
     button.addEventListener('click', () => switchReportTab(button.dataset.reportTab));
   });
@@ -250,7 +250,7 @@ function renderDashboardShell() {
 }
 
 function renderReportList(reports, tab) {
-  const container = document.getElementById('reports-container');
+  const container = document.getElementById('listContainer');
   if (!container) return;
 
   if (reports.length === 0) {
@@ -272,7 +272,7 @@ function renderReportList(reports, tab) {
     const reporterLabel = tab === 'feed' ? 'Warga Anonim' : report.reporter;
 
     return `
-      <article class="report-card mb-3">
+      <article class="col report-card mb-3">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3">
           <div class="flex-grow-1">
             <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
@@ -312,7 +312,7 @@ function renderReportList(reports, tab) {
 }
 
 function renderPagination(paginated, page) {
-  const container = document.getElementById('pagination-container');
+  const container = document.getElementById('paginationContainer');
   if (!container) return;
 
   const totalPages = Math.max(1, Math.ceil(paginated.count / REPORT_PAGE_SIZE));
@@ -362,7 +362,7 @@ function renderPagination(paginated, page) {
 }
 
 function renderStatusSummary(reports) {
-  const summary = document.getElementById('status-summary');
+  const summary = document.getElementById('summaryStats');
   if (!summary) return;
 
   const statuses = ['DRAFT', 'REPORTED', 'VERIFIED', 'IN_PROGRESS', 'RESOLVED'];
@@ -378,7 +378,7 @@ function renderStatusSummary(reports) {
     return `
       <div class="d-flex justify-content-between align-items-center">
         <span class="status-badge ${meta.className}"><i class="bi ${meta.icon}"></i>${meta.label}</span>
-        <strong>${counts[status]}</strong>
+        <span class="badge ${status === 'DRAFT' ? 'bg-secondary' : 'text-bg-primary'}">${counts[status]}</span>
       </div>
     `;
   }).join('');
@@ -386,10 +386,10 @@ function renderStatusSummary(reports) {
 
 async function loadSummaryStats() {
   try {
-    const data = await requestAPI('/api/reports/?tab=my_reports&page_size=1000&page=1');
+    const data = await requestAPI('/api/report/?tab=my_reports&page_size=1000&page=1');
     renderStatusSummary(normalizePaginatedData(data).results);
   } catch (error) {
-    const summary = document.getElementById('status-summary');
+    const summary = document.getElementById('summaryStats');
     if (summary) summary.innerHTML = '<div class="text-danger small">Rekap gagal dimuat.</div>';
   }
 }
@@ -398,8 +398,8 @@ async function loadDashboardData(tab = currentTab, page = currentPage) {
   currentTab = tab;
   currentPage = page;
 
-  const container = document.getElementById('reports-container');
-  const paginationContainer = document.getElementById('pagination-container');
+  const container = document.getElementById('listContainer');
+  const paginationContainer = document.getElementById('paginationContainer');
   if (container) {
     container.innerHTML = `
       <div class="empty-state">
@@ -411,7 +411,7 @@ async function loadDashboardData(tab = currentTab, page = currentPage) {
   if (paginationContainer) paginationContainer.innerHTML = '';
 
   try {
-    const data = await requestAPI(`/api/reports/?tab=${encodeURIComponent(tab)}&page=${page}`);
+    const data = await requestAPI(`/api/report/?tab=${encodeURIComponent(tab)}&page=${page}`);
     const paginated = normalizePaginatedData(data);
 
     document.getElementById('report-count').textContent = `${paginated.count} laporan`;
@@ -450,7 +450,7 @@ function getReportModal() {
 }
 
 function setReportFormAlert(message = '') {
-  const alertBox = document.getElementById('report-form-alert');
+  const alertBox = document.getElementById('reportFormAlert');
   if (!alertBox) return;
   alertBox.textContent = message;
   alertBox.classList.toggle('d-none', !message);
@@ -458,7 +458,7 @@ function setReportFormAlert(message = '') {
 
 function resetReportForm() {
   editingReportId = null;
-  const form = document.getElementById('report-form');
+  const form = document.getElementById('reportForm');
   form?.reset();
   form?.classList.remove('was-validated');
   setReportFormAlert();
@@ -473,16 +473,16 @@ function openCreateReportModal() {
 
 async function editDraft(id) {
   try {
-    const report = await requestAPI(`/api/reports/${id}/`);
+    const report = await requestAPI(`/api/report/${id}/`);
     if (!report.is_owner || report.status !== 'DRAFT') {
       throw new APIError('Hanya draft milik sendiri yang dapat diedit.', 403);
     }
 
     editingReportId = Number(id);
-    document.getElementById('report-title').value = report.title || '';
-    document.getElementById('report-category').value = report.category || '';
-    document.getElementById('report-location').value = report.location || '';
-    document.getElementById('report-description').value = report.description || '';
+    document.getElementById('inputTitle').value = report.title || '';
+    document.getElementById('inputCategory').value = report.category || '';
+    document.getElementById('inputLocation').value = report.location || '';
+    document.getElementById('inputDescription').value = report.description || '';
     document.getElementById('reportModalLabel').textContent = `Edit Draft #${report.id}`;
     setReportFormAlert();
     getReportModal()?.show();
@@ -492,7 +492,7 @@ async function editDraft(id) {
 }
 
 function setReportActionLoading(activeButton, isLoading) {
-  ['save-draft-button', 'submit-report-button'].forEach((id) => {
+  ['btnDraft', 'btnSubmit'].forEach((id) => {
     const button = document.getElementById(id);
     if (!button) return;
     button.disabled = isLoading;
@@ -503,28 +503,33 @@ function setReportActionLoading(activeButton, isLoading) {
 }
 
 async function submitReport(targetStatus, activeButton) {
-  const form = document.getElementById('report-form');
+  const form = document.getElementById('reportForm');
   if (!form) return;
 
   form.classList.add('was-validated');
   if (!form.checkValidity()) return;
 
   const payload = {
-    title: document.getElementById('report-title').value.trim(),
-    category: document.getElementById('report-category').value,
-    location: document.getElementById('report-location').value.trim(),
-    description: document.getElementById('report-description').value.trim(),
+    title: document.getElementById('inputTitle').value.trim(),
+    category: document.getElementById('inputCategory').value,
+    location: document.getElementById('inputLocation').value.trim(),
+    description: document.getElementById('inputDescription').value.trim(),
     status: targetStatus,
   };
   const method = editingReportId === null ? 'POST' : 'PUT';
   const endpoint = editingReportId === null
-    ? '/api/reports/'
-    : `/api/reports/${editingReportId}/`;
+    ? '/api/report/'
+    : `/api/report/${editingReportId}/`;
 
   setReportFormAlert();
   setReportActionLoading(activeButton, true);
   try {
     await requestAPI(endpoint, method, payload);
+    window.alert(
+      targetStatus === 'DRAFT'
+        ? 'Laporan berhasil disimpan sebagai DRAFT'
+        : 'Laporan berhasil diajukan',
+    );
     getReportModal()?.hide();
     resetReportForm();
     currentTab = 'my_reports';
@@ -541,15 +546,15 @@ async function submitReport(targetStatus, activeButton) {
 }
 
 function setupReportModal() {
-  const saveButton = document.getElementById('save-draft-button');
-  const submitButton = document.getElementById('submit-report-button');
+  const saveButton = document.getElementById('btnDraft');
+  const submitButton = document.getElementById('btnSubmit');
   const modalElement = document.getElementById('reportModal');
   if (!saveButton || !submitButton || !modalElement || modalElement.dataset.bound === 'true') return;
 
   modalElement.dataset.bound = 'true';
   saveButton.addEventListener('click', () => submitReport('DRAFT', saveButton));
   submitButton.addEventListener('click', () => submitReport('REPORTED', submitButton));
-  document.getElementById('report-form')?.addEventListener('submit', (event) => event.preventDefault());
+  document.getElementById('reportForm')?.addEventListener('submit', (event) => event.preventDefault());
   modalElement.addEventListener('hidden.bs.modal', resetReportForm);
 }
 

@@ -5,6 +5,7 @@ function isAuthenticated() {
 function clearAuthData() {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
+  localStorage.removeItem('username');
   localStorage.removeItem('citizen_username');
 }
 
@@ -14,7 +15,7 @@ function logout() {
 }
 
 function setLoginLoading(isLoading) {
-  const button = document.getElementById('login-submit');
+  const button = document.getElementById('loginSubmit');
   if (!button) return;
 
   button.disabled = isLoading;
@@ -23,16 +24,16 @@ function setLoginLoading(isLoading) {
 }
 
 function showLoginError(message) {
-  const alertBox = document.getElementById('login-alert');
+  const alertBox = document.getElementById('loginAlert');
   if (!alertBox) return;
   alertBox.textContent = message;
   alertBox.classList.remove('d-none');
 }
 
 function setupLoginForm() {
-  const form = document.getElementById('login-form');
-  const passwordInput = document.getElementById('login-password');
-  const togglePassword = document.getElementById('toggle-password');
+  const form = document.getElementById('loginForm');
+  const passwordInput = document.getElementById('loginPassword');
+  const togglePassword = document.getElementById('togglePassword');
 
   togglePassword?.addEventListener('click', () => {
     const showPassword = passwordInput.type === 'password';
@@ -43,9 +44,9 @@ function setupLoginForm() {
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    const username = document.getElementById('login-username').value.trim();
-    const password = document.getElementById('login-password').value;
-    document.getElementById('login-alert')?.classList.add('d-none');
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    document.getElementById('loginAlert')?.classList.add('d-none');
 
     if (!username || !password) {
       showLoginError('Username dan password wajib diisi.');
@@ -63,7 +64,7 @@ function setupLoginForm() {
 
       localStorage.setItem('access_token', tokenData.access);
       localStorage.setItem('refresh_token', tokenData.refresh);
-      localStorage.setItem('citizen_username', username);
+      localStorage.setItem('username', username);
 
       window.alert('Login berhasil. Selamat datang di Citizen Portal.');
       window.location.hash = '#dashboard';

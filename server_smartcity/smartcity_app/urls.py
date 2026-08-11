@@ -13,7 +13,9 @@ from rest_framework_simplejwt.views import (
 )
 
 from main_app.api_views import ReportViewSet
+from main_app.views import report_search_api
 from usermanagement_24782049.api_views import RegisterView
+from usermanagement_24782049.views import CitizenLoginView
 
 
 # ============================================================
@@ -45,6 +47,12 @@ router.register(
 # ============================================================
 
 urlpatterns = [
+    # Alias root yang dipakai Playwright untuk portal admin.
+    path(
+        "login/",
+        CitizenLoginView.as_view(),
+        name="playwright-login",
+    ),
     # Django Admin
     path(
         "admin/",
@@ -89,6 +97,18 @@ urlpatterns = [
         name="api-register",
     ),
 
+    # Alias nama URL yang dipakai automated test Lab Session 15.
+    path(
+        "api/token/",
+        TokenObtainPairView.as_view(),
+        name="token_obtain_pair",
+    ),
+    path(
+        "api/token/refresh/",
+        TokenRefreshView.as_view(),
+        name="token_refresh",
+    ),
+
     # Login JWT untuk memperoleh access dan refresh token.
     path(
         "api/token/",
@@ -106,6 +126,26 @@ urlpatterns = [
     # ========================================================
     # REPORT API
     # ========================================================
+
+    # Alias endpoint DRF yang dipakai automated test Lab Session 15.
+    path(
+        "api/report/",
+        ReportViewSet.as_view({"get": "list", "post": "create"}),
+        name="report-list",
+    ),
+    path(
+        "api/report/<int:pk>/",
+        ReportViewSet.as_view({
+            "get": "retrieve",
+            "put": "update",
+            "patch": "partial_update",
+            "delete": "destroy",
+        }),
+        name="report-detail",
+    ),
+
+    # Route search harus diletakkan sebelum DRF router.
+    path("api/reports/search/", report_search_api, name="report_search_api"),
 
     path(
         "api/",

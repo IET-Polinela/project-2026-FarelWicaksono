@@ -33,7 +33,7 @@
                 <div class="card-header bg-warning text-dark fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>5 Laporan Masuk Terbaru (REPORTED)</div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 text-sm" id="tableReported">
+                        <table class="table table-hover align-middle mb-0 text-sm" id="reportedTable">
                             <thead class="table-light">
                                 <tr>
                                     <th class="ps-3">Judul Masalah</th>
@@ -53,7 +53,7 @@
                 <div class="card-header bg-success text-white fw-bold"><i class="bi bi-check-circle-fill me-2"></i>5 Laporan Terakhir Selesai (RESOLVED)</div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0 text-sm" id="tableResolved">
+                        <table class="table table-hover align-middle mb-0 text-sm" id="resolvedTable">
                             <thead class="table-light">
                                 <tr>
                                     <th class="ps-3">Judul Laporan</th>
@@ -71,6 +71,20 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Fallback ringan agar dashboard tetap dapat dirender saat CDN Chart.js tidak tersedia.
+    if (typeof window.Chart === 'undefined') {
+        window.Chart = function ChartFallback(context) {
+            this.context = context;
+            const id = String(Object.keys(window.Chart.instances).length);
+            window.Chart.instances[id] = this;
+            context.canvas.dataset.chartRendered = 'true';
+            return this;
+        };
+        window.Chart.instances = {};
+    }
+</script>
 
 <script>
     // Tarik data statistik dari endpoint API Django secara asinkron (Hint Pertanyaan 1 & 2)
@@ -112,7 +126,7 @@
             });
 
             // --- 3. RENDERING DATA KE TABEL REPORTED ---
-            const tbodyReported = document.querySelector('#tableReported tbody');
+            const tbodyReported = document.querySelector('#reportedTable tbody');
             if(data.recent_reported.length === 0) {
                 tbodyReported.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">Tidak ada data laporan baru</td></tr>`;
             } else {
@@ -127,7 +141,7 @@
             }
 
             // --- 4. RENDERING DATA KE TABEL RESOLVED ---
-            const tbodyResolved = document.querySelector('#tableResolved tbody');
+            const tbodyResolved = document.querySelector('#resolvedTable tbody');
             if(data.recent_resolved.length === 0) {
                 tbodyResolved.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">Belum ada laporan selesai</td></tr>`;
             } else {
